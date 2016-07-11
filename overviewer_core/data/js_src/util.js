@@ -91,8 +91,13 @@ overviewer.util = {
 
                 overviewer.current_world = selected_world;
 
-                if (overviewer.collections.mapTypes[selected_world])
+                if (selected_world in overviewer.current_layer) {
                     overviewer.map.addLayer(overviewer.collections.mapTypes[selected_world][overviewer.current_layer[selected_world]]);
+                } else {
+                    var layers = overviewer.collections.mapTypes[selected_world];
+                    var initialLayer = layers[Object.keys(layers)[0]];
+                    overviewer.map.addLayer(initialLayer);
+                }
             },
             onAdd: function() {
                 console.log("onAdd mycontrol");
@@ -131,10 +136,29 @@ overviewer.util = {
             console.log(point);
         });
 
+        overviewer.map.on("dragend", function(e) {
+            var center = overviewer.map.getCenter()
+            console.log(center);
+
+            var point = overviewer.util.fromLatLngToWorld(center.lat, center.lng, tset);
+            console.log(point);
+        });
+
+        overviewer.map.on("zoomend", function(e) {
+            var center = overviewer.map.getCenter();
+            console.log(center);
+
+            var zoom = overviewer.map.getZoom();
+            console.log(zoom);
+
+            var point = overviewer.util.fromLatLngToWorld(center.lat, center.lng, tset);
+            console.log(point);
+        });
+
+
         var tilesetLayers = {}
 
         overviewer.worldCtrl = new overviewer.control();
-        
 
         $.each(overviewerConfig.worlds, function(idx, world_name) {
             overviewer.collections.mapTypes[world_name] = {}
@@ -184,11 +208,17 @@ overviewer.util = {
             .addTo(overviewer.map);
         overviewer.current_world = overviewerConfig.worlds[0];
 
+        // oh god why
+        var layers = overviewer.collections.mapTypes[overviewerConfig.worlds[0]];
+        var initialLayer = layers[Object.keys(layers)[0]];
+        overviewer.map.addLayer(initialLayer);
+
         //myLayer.addTo(overviewer.map);
         overviewer.map.setView(overviewer.util.fromWorldToLatLng(tset.spawn[0], tset.spawn[1], tset.spawn[2], tset), 1);
 
 
     },
+    
 
     'injectMarkerScript': function(url) {
         var m = document.createElement('script'); m.type = 'text/javascript'; m.async = false;
